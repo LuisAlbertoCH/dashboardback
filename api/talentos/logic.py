@@ -1,7 +1,7 @@
 from flask import jsonify, request, Response
 from bson import json_util
 from bson.objectid import ObjectId
-import json
+import json, datetime
 
 def json_handler(obj):
     """Manejador para la serialización JSON que maneja ObjectId."""
@@ -29,7 +29,8 @@ def create_talento(mongo):
                 'ApelPaterno': ApelPaterno,
                 'ApelMaterno': ApelMaterno,
                 'Email': Email,
-                'Fotografia': Fotografia
+                'Fotografia': Fotografia,
+                'indicadores': [] 
             }
             mongo.db.talentos.insert_one(talento)
             response = jsonify(talento)
@@ -113,6 +114,64 @@ def update_talento(id, mongo):
         return response
     else:
         return not_found()
+    
+def agregar_indicador(mongo, talent_id, valor, descripcion):
+    fecha = datetime.datetime.utcnow()
+    indicador = {
+        'fecha': fecha,
+        'valor': valor,
+        'descripcion': descripcion
+    }
+    result = mongo.db.talentos.update_one(
+        {'_id': ObjectId(talent_id)},
+        {'$push': {'indicadores': indicador}}
+    )
+    if result.modified_count == 0:
+        return jsonify({'error': 'No se pudo agregar el indicador'}), 500
+    return jsonify({'message': 'Indicador agregado exitosamente'}), 200
+
+def obtener_indicadores(mongo, talent_id):
+    talento = mongo.db.talentos.find_one({'_id': ObjectId(talent_id)})
+    if not talento:
+        return jsonify({'error': 'Talento no encontrado'}), 404
+    indicadores = talento.get('indicadores', [])
+    return jsonify({'indicadores': indicadores}), 200
+
+def calcular_evaluacion(mongo, talent_id):
+    talento = mongo.db.talentos.find_one({'_id': ObjectId(talent_id)})
+    if not talento:
+        return jsonify({'error': 'Talento no encontrado'}), 404
+    indicadores = talento.get('indicadores', [])
+    puntaje_total = sum(ind['valor'] for ind in indicadores)
+    estado = determinar_estado(puntaje_total)
+    return jsonify({'puntaje_total': puntaje_total, 'estado': estado}), 200
+
+def determinar_estado(puntaje):
+    if puntaje <= -20:
+        return 'Deficiente'
+    elif -20 < puntaje <= -10:
+        return 'Insuficiente'
+    elif -10 < puntaje <= 0:
+        return 'Normal'
+    elif 0 < puntaje <= 10:
+        return 'Regular'
+    elif 10 < puntaje <= 20:
+        return 'Bueno'
+    else:
+        return 'Excelente'
+    
+# Actualizar indicador de talento
+def update_talent_indicator(mongo, talent_id, indicator_id, value):
+    try:
+        result = mongo.db.talentos.update_one(
+            {"_id": ObjectId(talent_id), "indicadores._id": ObjectId(indicator_id)},
+            {"$set": {"indicadores.$.valor": value}}
+        )
+        if result.matched_count == 0:
+            return jsonify({"error": "Talento o indicador no encontrado"}), 404
+        return jsonify({"message": "Indicador actualizado exitosamente"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 ########################################################
 def not_found(error=None):

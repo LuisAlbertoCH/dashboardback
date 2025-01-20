@@ -14,3 +14,4 @@ six
 Werkzeug
 Flask-Bcrypt
 flask-cors
+requests

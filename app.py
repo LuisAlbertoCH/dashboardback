@@ -3,6 +3,7 @@ from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from flask_cors import CORS
 import logging
+import requests
 
 def json_handler(obj):
     """Manejador para la serialización JSON que maneja ObjectId."""
@@ -15,20 +16,24 @@ app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'application/json'
 
 # Aplica CORS a la aplicación para permitir solicitudes desde localhost:5001
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}}, methods=["GET", "POST", "PUT", "DELETE"])
 
 #Aplica CORS a la aplicación para permitir solicitudes desde otros dominios
 cors = CORS(app) 
 
 #Congifuración de la URI que se conecta al servidor de MongoDB (Cibercom)
-app.config['MONGO_URI'] = 'mongodb://localhost/backdashboard'
-#mongodb+srv://cibercom:cibercom123@cluster0.7gjmcsf.mongodb.net/controlempleados?retryWrites=true&w=majority
+app.config['MONGO_URI'] = 'mongodb+srv://lcancelah:IliB1ztGrBd52uoz@cluster0.krqlf.mongodb.net/dashboardbackend?retryWrites=true&w=majority&appName=Cluster0'
+#mongodb+srv://cibercom:cibercom123@cluster0.7gjmcsf.mongodb.net/dashboardbackend?retryWrites=true&w=majority
+#'mongodb://localhost/backdashboard'
 
 #Se crea una instancia de PyMongo para interactuar con MongoDB
 mongo = PyMongo(app)
 
 # Configura el nivel de registro para el sistema de registro (logging)
 logging.basicConfig(level=logging.DEBUG)
+
+SMARTSHEET_API_URL = "https://api.smartsheet.com/2.0"
+SMARTSHEET_TOKEN = "2Cc87jOA2pZBUfPdKy1qwppXVqgVMbqsk8ngF"
 
 #Aqui se importan las funciones de configuración de rutas de otros módulos que se encuentran en el apartado api de la raíz
 # Estas funciones definen las rutas y cómo se manejan las solicitudes HTTP
@@ -44,6 +49,7 @@ from api.earnings.routes import setup_earnings_routes
 from api.taxes.routes import setup_taxes_routes
 from api.visits.routes import setup_visits_routes
 from api.workplan.routes import setup_workplan_routes
+from api.smartsheet.routes import setup_smartsheet_routes
 
 #Configurar las rutas llamando a esas funciones de configuración de rutas definidas en otros módulos
 setup_login_routes(app, mongo)
@@ -58,6 +64,7 @@ setup_earnings_routes(app, mongo)
 setup_taxes_routes(app, mongo)
 setup_visits_routes(app, mongo)
 setup_workplan_routes(app, mongo)
+setup_smartsheet_routes(app)
 
 ########################################################
 
