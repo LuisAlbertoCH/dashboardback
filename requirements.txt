@@ -1,10 +1,15 @@
 blinker
+certifi
+charset-normalizer
 bson
 click
 colorama
 dnspython
 Flask
+Flask-Bcrypt
+Flask-Cors
 Flask-PyMongo
+idna
 itsdangerous
 Jinja2
 MarkupSafe
@@ -15,3 +20,4 @@ Werkzeug
 Flask-Bcrypt
 flask-cors
 requests
+urllib3
