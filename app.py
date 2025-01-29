@@ -4,12 +4,17 @@ from bson.objectid import ObjectId
 from flask_cors import CORS
 import logging
 import requests
+from dotenv import load_dotenv
+import os
 
 def json_handler(obj):
     """Manejador para la serialización JSON que maneja ObjectId."""
     if isinstance(obj, ObjectId):
         return str(obj)
     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
+# Cargar variables de entorno desde .env
+load_dotenv()
 
 # Crear una instancia de la aplicación Flask
 app = Flask(__name__)
@@ -22,9 +27,10 @@ CORS(app, resources={r"/*": {"origins": "*"}}, methods=["GET", "POST", "PUT", "D
 cors = CORS(app) 
 
 #Congifuración de la URI que se conecta al servidor de MongoDB (Cibercom)
-app.config['MONGO_URI'] = 'mongodb+srv://lcancelah:IliB1ztGrBd52uoz@cluster0.krqlf.mongodb.net/dashboardbackend?retryWrites=true&w=majority&appName=Cluster0'
+app.config['MONGO_URI'] = os.getenv('MONGO_URI')
 #mongodb+srv://cibercom:cibercom123@cluster0.7gjmcsf.mongodb.net/dashboardbackend?retryWrites=true&w=majority
 #'mongodb://localhost/backdashboard'
+# 'mongodb+srv://lcancelah:IliB1ztGrBd52uoz@cluster0.krqlf.mongodb.net/dashboardbackend?retryWrites=true&w=majority&appName=Cluster0'
 
 #Se crea una instancia de PyMongo para interactuar con MongoDB
 mongo = PyMongo(app)
@@ -32,8 +38,9 @@ mongo = PyMongo(app)
 # Configura el nivel de registro para el sistema de registro (logging)
 logging.basicConfig(level=logging.DEBUG)
 
-SMARTSHEET_API_URL = "https://api.smartsheet.com/2.0"
-SMARTSHEET_TOKEN = "2Cc87jOA2pZBUfPdKy1qwppXVqgVMbqsk8ngF"
+# Configuración de Smartsheet
+SMARTSHEET_API_URL = os.getenv("SMARTSHEET_API_URL")
+SMARTSHEET_TOKEN = os.getenv("SMARTSHEET_TOKEN")
 
 #Aqui se importan las funciones de configuración de rutas de otros módulos que se encuentran en el apartado api de la raíz
 # Estas funciones definen las rutas y cómo se manejan las solicitudes HTTP
@@ -81,4 +88,8 @@ def not_found(error=None):
 
 #Ejecuta la aplicación en modo depuración y se asigna el puerto de manera manual
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(
+        debug=os.getenv("FLASK_DEBUG") == "True",
+        host=os.getenv("FLASK_HOST"),
+        port=int(os.getenv("FLASK_PORT"))
+    )
