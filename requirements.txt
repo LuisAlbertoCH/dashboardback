@@ -1,7 +1,6 @@
 blinker
 certifi
 charset-normalizer
-bson
 click
 colorama
 dnspython
@@ -21,3 +20,4 @@ Flask-Bcrypt
 flask-cors
 requests
 urllib3
+python-dotenv
